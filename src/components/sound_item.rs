@@ -9,18 +9,19 @@ use ratatui::{
     crossterm::event::KeyCode,
 };
 use rodio::OutputStreamHandle;
-use crate::components::sound::Sound;
+use crate::{components::sound::Sound};
 
 pub struct SoundItem {
     id: u32,
     name: String,
     icon: String,
     selected: bool,
+    active: bool,
     sound: Sound
 }
 
 impl SoundItem {
-    pub fn new(id: u32, name: String, path: String, volume: f32, icon: String, selected: bool, stream_handle: Option<&OutputStreamHandle>) -> Self {
+    pub fn new(id: u32, name: String, path: String, volume: f32, icon: String, selected: bool, active: bool, stream_handle: Option<&OutputStreamHandle>) -> Self {
         let sound = match stream_handle {
             Some(handle) => Sound::new(path, volume, handle),
             None => {
@@ -33,6 +34,7 @@ impl SoundItem {
             name,
             icon,
             selected,
+            active,
             sound
         }
     }
@@ -41,12 +43,16 @@ impl SoundItem {
         self.selected = !self.selected;
     }
 
+    pub fn toggle_active(&mut self) {
+        self.active = !self.active;
+    }
+
     pub fn is_selected(&self) -> bool {
         self.selected
     }
 
-    pub fn is_playing(&self) -> bool {
-        return self.sound.is_playing();
+    pub fn is_active(&self) -> bool {
+        self.active
     }
 
     pub fn get_icon(&self) -> &str {
@@ -74,7 +80,9 @@ impl SoundItem {
             match key {
                 KeyCode::Left => { self.change_volume(-0.05); },
                 KeyCode::Right => { self.change_volume(0.05); },
-                KeyCode::Char(' ') => { self.sound.switch_play_pause(); }
+                KeyCode::Char(' ') => { 
+                    self.sound.switch_play_pause();
+                    self.toggle_active();}
                 _ => {}
             }
         }
@@ -109,7 +117,7 @@ impl Widget for &SoundItem {
         let mut volume_paragraph = Paragraph::new(Text::from(volume_text))
             .style(Style::default().fg(Color::Cyan))
             .alignment(Alignment::Right);
-        if self.is_playing() {
+        if self.is_active() {
             // Si el sonido está reproduciendo, resaltar el fondo
             name_paragraph = name_paragraph.bg(Color::Green);
             volume_paragraph = volume_paragraph.bg(Color::Green);
