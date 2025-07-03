@@ -4,5 +4,7 @@
 
 Using [ratatui](https://ratatui.rs/).
 
-Audio files will be get from the Blanket repo, will add a .md with the credits to each author when i add them.
+## Sounds
+
+See [CREDITS](./resources/CREDITS.md)
 
