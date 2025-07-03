@@ -38,6 +38,16 @@ impl Sound {
         }
     }
 
+    pub fn switch_play_pause(&mut self) {
+        if let Some(ref sink) = self.sink {
+            if sink.is_paused() {
+                sink.play();
+            } else {
+                sink.pause();
+            }
+        }
+    }
+
     pub fn set_volume(&mut self, volume: f32) {
         self.volume = volume.clamp(0.0, 1.0);
         if let Some(ref sink) = self.sink {
@@ -47,5 +57,12 @@ impl Sound {
 
     pub fn get_volume(&self) -> f32 {
         self.volume
+    }
+
+    pub fn is_playing(&self) -> bool {
+        if let Some(ref sink) = self.sink {
+            return !sink.is_paused();
+        }
+        false
     }
 }
