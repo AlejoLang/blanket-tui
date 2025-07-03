@@ -20,6 +20,7 @@ pub struct App{
     sounds_path: String,
     stream_handle: Option<OutputStreamHandle>,
     _stream: Option<OutputStream>,
+    general_play_state: bool,
 }
 
 impl App {
@@ -32,7 +33,7 @@ impl App {
                 (None, None)
             }
         };
-        App { running: true, sounds_list: vec![], sounds_path, stream_handle, _stream: stream }
+        App { running: true, sounds_list: vec![], sounds_path, stream_handle, _stream: stream, general_play_state: true }
     }
 
     pub fn run(&mut self, term: &mut DefaultTerminal) -> io::Result<()> {
@@ -64,6 +65,7 @@ impl App {
                     0.5, // Default volume
                     "🔊".to_string(), // Default ico
                     self.sounds_list.is_empty() && self.sounds_list.len() == 0,
+                    false,
                     self.stream_handle.as_ref()
                 );
                 self.sounds_list.push(sound_item);
@@ -94,6 +96,10 @@ impl App {
         self.sounds_list.iter_mut().find(|item| item.is_selected())
     }
 
+    pub fn get_general_play_state(&mut self) -> bool {
+        self.general_play_state
+    }
+
     fn select_previous_sound(&mut self) {
         for (i, sound) in self.sounds_list.iter_mut().enumerate() {
             if sound.is_selected() {
@@ -116,6 +122,15 @@ impl App {
         } 
     }
 
+    fn switch_play_pause_all(&mut self) {
+        self.general_play_state = !self.general_play_state;
+        for sound_item in &mut self.sounds_list {
+            if sound_item.is_active() {
+                sound_item.switch_play_pause();
+            } 
+        }
+    }
+
     fn handle_events(&mut self) -> io::Result<()> {
         match event::read()? {
             event::Event::Key(key_event) => self.handle_key_event(key_event),
@@ -129,12 +144,9 @@ impl App {
         match key_event.code {
             KeyCode::Char('q') => self.exit(),
             KeyCode::Esc => self.exit(),
-            KeyCode::Up => {
-                self.select_previous_sound();
-            }
-            KeyCode::Down => {
-                self.select_next_sound();
-            }
+            KeyCode::Up => { self.select_previous_sound(); }
+            KeyCode::Down => { self.select_next_sound(); }
+            KeyCode::Enter => { self.switch_play_pause_all(); }
             _ => {
                 if let Some(selected_sound) = self.get_selected_sound_mut() {
                     if let Err(e) = selected_sound.handle_key_event(key_event.code) {
