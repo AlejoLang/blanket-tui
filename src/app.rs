@@ -1,6 +1,6 @@
 use std::{
     fs::{ self, ReadDir }, 
-    io, path::Path, 
+    io, path::Path, thread::sleep, time::Duration, 
 };
 use ratatui::{
     crossterm::event::{ self, KeyCode, KeyEvent }, 
@@ -12,20 +12,27 @@ use rodio::{
     OutputStream, 
     OutputStreamHandle
 };
-use crate::components::{sound_item::SoundItem};
+use crate::components::{sound_item::SoundItem, sound::Sound};
 
 pub struct App{
     running: bool,
     sounds_list: Vec<SoundItem>,
     sounds_path: String,
-    stream_handle: OutputStreamHandle
+    stream_handle: Option<OutputStreamHandle>,
+    _stream: Option<OutputStream>,
 }
 
 impl App {
     pub fn default() -> Self {
-        let sounds_path: String = "../resources/sounds".into();
-        let (_stream, stream_handle) = OutputStream::try_default().unwrap();
-        App { running: true, sounds_list: vec![], sounds_path, stream_handle}
+        let sounds_path: String = "resources/sounds".into();
+        let (stream, stream_handle) = match OutputStream::try_default() {
+            Ok((s, h)) => (Some(s), Some(h)),
+            Err(e) => {
+                eprintln!("Warning: No audio device available: {}. Audio functionality will be disabled.", e);
+                (None, None)
+            }
+        };
+        App { running: true, sounds_list: vec![], sounds_path, stream_handle, _stream: stream }
     }
 
     pub fn run(&mut self, term: &mut DefaultTerminal) -> io::Result<()> {
@@ -57,6 +64,7 @@ impl App {
                     0.5, // Default volume
                     "🔊".to_string(), // Default ico
                     self.sounds_list.is_empty() && self.sounds_list.len() == 0,
+                    self.stream_handle.as_ref()
                 );
                 self.sounds_list.push(sound_item);
            }
@@ -64,6 +72,15 @@ impl App {
     }
 
     fn draw(&self, frame: &mut Frame) {
+        if self.sounds_list.is_empty() {
+            // Display a message when no sounds are available
+            let paragraph = ratatui::widgets::Paragraph::new("No sound files found in the sounds directory")
+                .style(ratatui::style::Style::default().fg(ratatui::style::Color::Yellow))
+                .alignment(ratatui::layout::Alignment::Center);
+            frame.render_widget(paragraph, frame.area());
+            return;
+        }
+        
         let chunks = Layout::default()
             .direction(ratatui::layout::Direction::Vertical)
             .constraints(vec![Constraint::Percentage(100 / self.sounds_list.len() as u16); self.sounds_list.len()])
