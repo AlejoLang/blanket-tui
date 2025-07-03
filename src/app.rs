@@ -1,20 +1,35 @@
-use std::{io};
-
-use ratatui::{
-    crossterm::event::{
-        self, KeyCode, KeyEvent
-    }, symbols::border, widgets::{Block, Paragraph}, DefaultTerminal, Frame
+use std::{
+    fs::{ self, ReadDir }, 
+    io, path::Path, 
 };
-pub struct App {
-    running: bool
+use ratatui::{
+    crossterm::event::{ self, KeyCode, KeyEvent }, 
+    layout::{ Constraint, Layout }, 
+    DefaultTerminal, 
+    Frame
+};
+use rodio::{
+    OutputStream, 
+    OutputStreamHandle
+};
+use crate::components::{sound_item::SoundItem};
+
+pub struct App{
+    running: bool,
+    sounds_list: Vec<SoundItem>,
+    sounds_path: String,
+    stream_handle: OutputStreamHandle
 }
 
 impl App {
-    pub fn new() -> Self {
-        App { running: true }
+    pub fn default() -> Self {
+        let sounds_path: String = "../resources/sounds".into();
+        let (_stream, stream_handle) = OutputStream::try_default().unwrap();
+        App { running: true, sounds_list: vec![], sounds_path, stream_handle}
     }
 
     pub fn run(&mut self, term: &mut DefaultTerminal) -> io::Result<()> {
+        self.setup_list();
         while self.running {
             term.draw(|frame: &mut Frame| self.draw(frame))?;
             self.handle_events()?;
@@ -22,12 +37,66 @@ impl App {
         Ok(())
     }
 
+    fn setup_list(&mut self) {
+        let dir = fs::read_dir(&self.sounds_path);
+        if dir.is_err() {
+            eprintln!("Error reading sounds directory: {}", dir.unwrap_err());
+            return;
+        };
+        let dir: ReadDir = dir.unwrap();
+        self.sounds_list.clear();
+        for entry in dir {
+            let entry = entry.unwrap();
+            let path = entry.path();
+            if path.is_file() {
+                let file_name = entry.file_name().into_string().unwrap_or_default();
+                let sound_item = SoundItem::new(
+                    self.sounds_list.len() as u32,
+                    file_name.clone(),
+                    path.to_string_lossy().to_string(),
+                    0.5, // Default volume
+                    "🔊".to_string(), // Default ico
+                    self.sounds_list.is_empty() && self.sounds_list.len() == 0,
+                );
+                self.sounds_list.push(sound_item);
+           }
+        }
+    }
+
     fn draw(&self, frame: &mut Frame) {
-       let b = Block::bordered().border_set(border::THICK);
-       let p = Paragraph::new("Hello, world!")
-            .block(b)
-            .alignment(ratatui::layout::Alignment::Center);
-        frame.render_widget(p, frame.area());
+        let chunks = Layout::default()
+            .direction(ratatui::layout::Direction::Vertical)
+            .constraints(vec![Constraint::Percentage(100 / self.sounds_list.len() as u16); self.sounds_list.len()])
+            .split(frame.area());
+        for (i, sound_item) in self.sounds_list.iter().enumerate() {
+            frame.render_widget(sound_item, chunks[i]);
+        }
+    }
+
+    fn get_selected_sound_mut(&mut self) -> Option<&mut SoundItem> {
+        self.sounds_list.iter_mut().find(|item| item.is_selected())
+    }
+
+    fn select_previous_sound(&mut self) {
+        for (i, sound) in self.sounds_list.iter_mut().enumerate() {
+            if sound.is_selected() {
+                sound.toggle_selection();
+                let previous_index = if i == 0 { self.sounds_list.len() - 1 } else { i - 1 };
+                self.sounds_list[previous_index].toggle_selection();
+                return;
+            }
+        } 
+    }
+
+    fn select_next_sound(&mut self) {
+        for (i, sound) in self.sounds_list.iter_mut().enumerate() {
+            if sound.is_selected() {
+                sound.toggle_selection();
+                let previous_index = if i == self.sounds_list.len() - 1 { 0 } else { i + 1 };
+                self.sounds_list[previous_index].toggle_selection();
+                return;
+            }
+        } 
     }
 
     fn handle_events(&mut self) -> io::Result<()> {
@@ -43,7 +112,19 @@ impl App {
         match key_event.code {
             KeyCode::Char('q') => self.exit(),
             KeyCode::Esc => self.exit(),
-            _ => () 
+            KeyCode::Up => {
+                self.select_previous_sound();
+            }
+            KeyCode::Down => {
+                self.select_next_sound();
+            }
+            _ => {
+                if let Some(selected_sound) = self.get_selected_sound_mut() {
+                    if let Err(e) = selected_sound.handle_key_event(key_event.code) {
+                        eprintln!("Error handling key event: {}", e);
+                    }
+                } 
+            }
         }
     }
 
