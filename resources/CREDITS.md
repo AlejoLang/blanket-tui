@@ -1,6 +1,6 @@
 # Sounds credits
 
-Default sounds were taken from the [blanket repo](https://github.com/rafaelmardojai/blanket/data/resources/sounds).
+Default sounds were taken from the [blanket repo](https://github.com/rafaelmardojai/blanket/tree/master/data/resources/sounds).
 
 |                                                     Sound                                                      |     Author     |   Editor\*   |    License    |
 | :------------------------------------------------------------------------------------------------------------: | :------------: | :----------: | :-----------: |
