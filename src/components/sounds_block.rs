@@ -162,7 +162,7 @@ impl Widget for &SoundsBlock {
         }
 
         let num_chunks = ((area.height as usize) / 2).clamp(1, self.sounds_list.len());
-        let constraints = vec![Constraint::Min(2); num_chunks];
+        let constraints = vec![Constraint::Length(2); num_chunks];
         let min = self.lower_bound.clamp(0, self.sounds_list.len() - num_chunks);
         let max = (self.lower_bound + num_chunks - 1).clamp(min, self.sounds_list.len() - 1);
         let chunks = Layout::default()
