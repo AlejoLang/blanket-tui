@@ -1,12 +1,7 @@
 use std::io;
 
 use ratatui::{
-    buffer::Buffer, 
-    layout::{Alignment, Constraint, Layout, Rect}, 
-    style::{Color, Style, Stylize}, 
-    text::Text, 
-    widgets::{Paragraph, Widget},
-    crossterm::event::KeyCode,
+    buffer::Buffer, crossterm::event::KeyCode, layout::{Alignment, Constraint, Layout, Rect}, style::{Color, Style, Stylize}, text::Text, widgets::{Block, Paragraph, Widget}
 };
 use rodio::OutputStreamHandle;
 use crate::components::sound::Sound;
@@ -92,6 +87,21 @@ impl SoundItem {
 
 impl Widget for &SoundItem {
     fn render(self, area: Rect, buf: &mut Buffer) {
+
+        let item_block = Block::default()
+            .style({
+                if self.selected {
+                    Style::default().bg(Color::Blue)
+                } else {
+                    if self.is_active() {
+                        Style::default().bg(Color::Green)
+                    } else {
+                        Style::default()
+                    }
+                }
+
+            });
+        item_block.render(area, buf);
         // Crear el layout horizontal para dividir el área en dos columnas
         let chunks = Layout::default()
             .direction(ratatui::layout::Direction::Horizontal)
@@ -99,11 +109,12 @@ impl Widget for &SoundItem {
                 Constraint::Min(1),    // Nombre - toma el espacio restante
                 Constraint::Length(15) // Volumen - ancho fijo de 15 caracteres
             ])
+            .horizontal_margin(1)
             .split(area);
 
         // Crear el texto del nombre (lado izquierdo)
         let name_style = if self.selected {
-            Style::default().fg(Color::Yellow).bold()
+            Style::default().fg(Color::White).bold()
         } else {
             Style::default().fg(Color::White)
         };
@@ -113,20 +124,13 @@ impl Widget for &SoundItem {
             .alignment(Alignment::Left);
 
         // Crear el texto del volumen (lado derecho)
-        let volume_text = format!("Vol: {:.0}%", self.sound.get_volume() * 100.0);
-        let mut volume_paragraph = Paragraph::new(Text::from(volume_text))
-            .style(Style::default().fg(Color::Cyan))
+        let volume_percentage = format!("{:.0}%", self.sound.get_volume() * 100.0);
+        let volume_bars = "|".repeat((self.sound.get_volume() * 10.0).round() as usize).fg(Color::White);
+        let volume_text = format!("{} {}", volume_bars, volume_percentage);
+        let volume_paragraph = Paragraph::new(Text::from(volume_text))
+            .style(name_style)
             .alignment(Alignment::Right);
-        if self.is_active() {
-            // Si el sonido está reproduciendo, resaltar el fondo
-            name_paragraph = name_paragraph.bg(Color::Green);
-            volume_paragraph = volume_paragraph.bg(Color::Green);
-        }
-        if self.selected {
-            // Si el elemento está seleccionado, resaltar el fondo
-            name_paragraph = name_paragraph.bg(Color::Blue);
-            volume_paragraph = volume_paragraph.bg(Color::Blue);
-        }
+        
         // Renderizar ambos componentes
         name_paragraph.render(chunks[0], buf);
         volume_paragraph.render(chunks[1], buf);

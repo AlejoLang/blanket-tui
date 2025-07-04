@@ -1,4 +1,4 @@
-use ratatui::{buffer::Buffer, crossterm::event::KeyCode, layout::{Layout, Constraint, Rect}, widgets::Widget};
+use ratatui::{buffer::Buffer, crossterm::event::KeyCode, layout::{Constraint, Layout, Rect}, style::Stylize, symbols::border, text::{Line, Text}, widgets::{Block, Widget}};
 use crate::components::sound_item::SoundItem;
 
 pub struct SoundsBlock {
@@ -13,7 +13,7 @@ impl SoundsBlock {
     }
 
     pub fn default() -> Self {
-        SoundsBlock { sounds_list: vec![], lower_bound: 0, upper_bound: 4 }
+        SoundsBlock { sounds_list: vec![], lower_bound: 0, upper_bound: 8 }
     }
 
     pub fn add_sound(&mut self, sound: SoundItem) {
@@ -109,13 +109,18 @@ impl SoundsBlock {
     }
 
     pub fn handle_resize(&mut self, area: Rect) {
+        if self.sounds_list.is_empty() {
+            self.lower_bound = 0;
+            self.upper_bound = 0;
+            return;
+        }
         let selected_info = if let Some((_, index)) = self.get_selected_sound_mut() {
             Some(index)
         } else {
             None
         };
         
-        let num_chunks = (area.height as usize) / 2;
+        let num_chunks = (area.height as usize - 4).clamp(1, self.sounds_list.len());
         self.upper_bound = (self.lower_bound + num_chunks - 1).clamp(self.lower_bound, self.sounds_list.len() - 1);
         
         if let Some(index_fixed) = selected_info {
@@ -127,31 +132,15 @@ impl SoundsBlock {
     }
 }
 
-impl Widget for SoundsBlock {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        if self.sounds_list.is_empty() {
-            // Display a message when no sounds are available
-            let paragraph = ratatui::widgets::Paragraph::new("No sound files found in the sounds directory")
-                .style(ratatui::style::Style::default().fg(ratatui::style::Color::Yellow))
-                .alignment(ratatui::layout::Alignment::Center);
-            paragraph.render(area, buf);
-            return;
-        }
-
-        let num_chunks = self.upper_bound - self.lower_bound + 1;
-        let constraints = vec![Constraint::Min(2); num_chunks];
-        let chunks = Layout::default()
-            .direction(ratatui::layout::Direction::Vertical)
-            .constraints(constraints)
-            .split(area);
-        for (i, sound_item) in self.sounds_list[self.lower_bound..=self.upper_bound].iter().enumerate() {
-            sound_item.render(chunks[i], buf);
-        }
-    }
-}
-
 impl Widget for &SoundsBlock {
     fn render(self, area: Rect, buf: &mut Buffer) {
+        let title = Line::from(" Sounds ".bold());
+        let block = Block::bordered()
+            .border_set(border::THICK)
+            .title(title)
+            .title_alignment(ratatui::layout::Alignment::Center);
+        block.render(area, buf);
+
         if self.sounds_list.is_empty() {
             // Display a message when no sounds are available
             let paragraph = ratatui::widgets::Paragraph::new("No sound files found in the sounds directory")
@@ -161,13 +150,14 @@ impl Widget for &SoundsBlock {
             return;
         }
 
-        let num_chunks = ((area.height as usize) / 2).clamp(1, self.sounds_list.len());
-        let constraints = vec![Constraint::Length(2); num_chunks];
+        let num_chunks = (area.height as usize - 4).clamp(1, self.sounds_list.len());
+        let constraints = vec![Constraint::Length(1); num_chunks];
         let min = self.lower_bound.clamp(0, self.sounds_list.len() - num_chunks);
         let max = (self.lower_bound + num_chunks - 1).clamp(min, self.sounds_list.len() - 1);
         let chunks = Layout::default()
             .direction(ratatui::layout::Direction::Vertical)
             .constraints(constraints)
+            .margin(2)
             .split(area);
         for (i, sound_item) in self.sounds_list[self.lower_bound..=max].iter().enumerate() {
             sound_item.render(chunks[i], buf);
