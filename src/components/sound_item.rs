@@ -9,7 +9,7 @@ use ratatui::{
     crossterm::event::KeyCode,
 };
 use rodio::OutputStreamHandle;
-use crate::{components::sound::Sound};
+use crate::components::sound::Sound;
 
 pub struct SoundItem {
     id: u32,
