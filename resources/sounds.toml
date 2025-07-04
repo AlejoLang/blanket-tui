@@ -24,8 +24,8 @@ file = './sounds/waves.ogg'
 icon = '󰞍'
 
 [[sound]]
-name = 'River'
-file = './sounds/river.ogg'
+name = 'Stream'
+file = './sounds/stream.ogg'
 icon = '󰞍'
 
 [[sound]]
@@ -54,8 +54,8 @@ file = './sounds/city.ogg'
 icon = '󰅆'
 
 [[sound]]
-name = 'Coffe Shop'
-file = './sounds/coffe-shop.ogg'
+name = 'Coffee Shop'
+file = './sounds/coffee-shop.ogg'
 icon = '󰅶'
 
 [[sound]]
