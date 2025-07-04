@@ -1,5 +1,6 @@
 mod app;
 mod components;
+mod config;
 use std::io;
 use app::App;
 

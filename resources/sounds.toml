@@ -1,0 +1,69 @@
+[[sound]]
+name = 'Rain'
+file = './sounds/rain.ogg'
+icon = ''
+
+[[sound]]
+name = 'Storm'
+file = './sounds/storm.ogg'
+icon = ''
+
+[[sound]]
+name = 'Wind'
+file = './sounds/wind.ogg'
+icon = ''
+
+[[sound]]
+name = 'Fireplace'
+file = './sounds/fireplace.ogg'
+icon = '󰸮'
+
+[[sound]]
+name = 'Waves'
+file = './sounds/waves.ogg'
+icon = '󰞍'
+
+[[sound]]
+name = 'River'
+file = './sounds/river.ogg'
+icon = '󰞍'
+
+[[sound]]
+name = 'Boat'
+file = './sounds/boat.ogg'
+icon = '󰻈'
+
+[[sound]]
+name = 'Birds'
+file = './sounds/birds.ogg'
+icon = '󱗆'
+
+[[sound]]
+name = 'Summer Night'
+file = './sounds/summer-night.ogg'
+icon = '󰽥'
+
+[[sound]]
+name = 'Train'
+file = './sounds/train.ogg'
+icon = '󰔬'
+
+[[sound]]
+name = 'City'
+file = './sounds/city.ogg'
+icon = '󰅆'
+
+[[sound]]
+name = 'Coffe Shop'
+file = './sounds/coffe-shop.ogg'
+icon = '󰅶'
+
+[[sound]]
+name = 'White Noise'
+file = './sounds/white-noise.ogg'
+icon = '󱑽'
+
+[[sound]]
+name = 'Pink Noise'
+file = './sounds/pink-noise.ogg'
+icon = '󱑽'

@@ -1,6 +1,6 @@
 use std::{
-    fs::{ self, ReadDir }, 
-    io, path::Path, thread::sleep, time::Duration, 
+    fs,
+    io, 
 };
 use ratatui::{
     crossterm::event::{ self, KeyCode, KeyEvent }, 
@@ -12,12 +12,15 @@ use rodio::{
     OutputStream, 
     OutputStreamHandle
 };
-use crate::components::{sound_item::SoundItem, sound::Sound};
+use crate::components::{sound_item::SoundItem};
+use crate::config::Config;
+
+const RESOURCES_PATH: &str = "resources/";
+const DEFAULT_VOLUME: f32 = 0.5;
 
 pub struct App{
     running: bool,
     sounds_list: Vec<SoundItem>,
-    sounds_path: String,
     stream_handle: Option<OutputStreamHandle>,
     _stream: Option<OutputStream>,
     general_play_state: bool,
@@ -25,7 +28,6 @@ pub struct App{
 
 impl App {
     pub fn default() -> Self {
-        let sounds_path: String = "resources/sounds".into();
         let (stream, stream_handle) = match OutputStream::try_default() {
             Ok((s, h)) => (Some(s), Some(h)),
             Err(e) => {
@@ -33,7 +35,7 @@ impl App {
                 (None, None)
             }
         };
-        App { running: true, sounds_list: vec![], sounds_path, stream_handle, _stream: stream, general_play_state: true }
+        App { running: true, sounds_list: vec![], stream_handle, _stream: stream, general_play_state: true }
     }
 
     pub fn run(&mut self, term: &mut DefaultTerminal) -> io::Result<()> {
@@ -46,30 +48,26 @@ impl App {
     }
 
     fn setup_list(&mut self) {
-        let dir = fs::read_dir(&self.sounds_path);
-        if dir.is_err() {
-            eprintln!("Error reading sounds directory: {}", dir.unwrap_err());
-            return;
-        };
-        let dir: ReadDir = dir.unwrap();
-        self.sounds_list.clear();
-        for entry in dir {
-            let entry = entry.unwrap();
-            let path = entry.path();
-            if path.is_file() {
-                let file_name = entry.file_name().into_string().unwrap_or_default();
+        let sounds_file = fs::read_to_string(RESOURCES_PATH.to_string() + "sounds.toml");
+        
+        if sounds_file.is_err() {
+            eprintln!("Warning: sounds.toml file not found. No sounds will be loaded.");
+        } else {
+            let toml_file = sounds_file.unwrap();
+            let config: Config = toml::from_str(&toml_file).unwrap();
+            for (i, sound) in config.sound.iter().enumerate() {
                 let sound_item = SoundItem::new(
-                    self.sounds_list.len() as u32,
-                    file_name.clone(),
-                    path.to_string_lossy().to_string(),
-                    0.5, // Default volume
-                    "🔊".to_string(), // Default ico
-                    self.sounds_list.is_empty() && self.sounds_list.len() == 0,
-                    false,
+                    i as u32, 
+                    sound.name.clone(), 
+                    RESOURCES_PATH.to_string() + &sound.file, 
+                    DEFAULT_VOLUME,
+                    sound.icon.clone(), 
+                    i == 0, 
+                    false, 
                     self.stream_handle.as_ref()
                 );
                 self.sounds_list.push(sound_item);
-           }
+            }
         }
     }
 
