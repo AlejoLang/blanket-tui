@@ -26,6 +26,10 @@ impl Sound {
         Sound { path, volume, sink: None }
     }
 
+    pub fn get_path(&self) -> &str {
+        &self.path
+    }
+
     pub fn play(&self) {
         if let Some(ref sink) = self.sink {
             sink.play();

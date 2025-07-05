@@ -119,7 +119,7 @@ impl SoundsBlock {
         } else {
             None
         };
-        
+         
         let num_chunks = (area.height as usize - 4).clamp(1, self.sounds_list.len());
         self.upper_bound = (self.lower_bound + num_chunks - 1).clamp(self.lower_bound, self.sounds_list.len() - 1);
         

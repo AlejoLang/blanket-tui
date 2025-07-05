@@ -54,6 +54,10 @@ impl SoundItem {
         &self.icon
     }
 
+    pub fn get_path(&self) -> &str {
+        self.sound.get_path()
+    }
+    
     pub fn get_name(&self) -> &str {
         &self.name
     }
