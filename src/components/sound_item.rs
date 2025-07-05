@@ -66,19 +66,19 @@ impl SoundItem {
         self.id
     }
     
-    pub fn change_volume(&mut self, delta: f32) {
-        self.sound.set_volume(self.sound.get_volume() + delta);
+    pub fn change_volume(&mut self, delta: f32, mult: f32) {
+        self.sound.set_volume(self.sound.get_volume() + delta, mult);
     }
 
     pub fn switch_play_pause(&mut self) {
         self.sound.switch_play_pause();
     }
 
-    pub fn handle_key_event(&mut self, key: KeyCode, general_play_status: bool) -> io::Result<()> {
+    pub fn handle_key_event(&mut self, key: KeyCode, general_play_status: bool, mult: f32) -> io::Result<()> {
         if self.selected {
             match key {
-                KeyCode::Left => { self.change_volume(-0.05); },
-                KeyCode::Right => { self.change_volume(0.05); },
+                KeyCode::Left => { self.change_volume(-0.05, mult); },
+                KeyCode::Right => { self.change_volume(0.05, mult); },
                 KeyCode::Char(' ') => { 
                     if general_play_status {
                         self.sound.switch_play_pause();

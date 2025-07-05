@@ -52,10 +52,10 @@ impl Sound {
         }
     }
 
-    pub fn set_volume(&mut self, volume: f32) {
+    pub fn set_volume(&mut self, volume: f32, mult: f32) {
         self.volume = volume.clamp(0.0, 1.0);
         if let Some(ref sink) = self.sink {
-            sink.set_volume(self.volume);
+            sink.set_volume(self.volume * mult);
         }
     }
 

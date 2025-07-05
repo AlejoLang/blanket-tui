@@ -5,15 +5,16 @@ pub struct SoundsBlock {
     sounds_list: Vec<SoundItem>,
     lower_bound: usize,
     upper_bound: usize,
+    volume_mult: f32
 }
 
 impl SoundsBlock {
     pub fn new(sounds: Vec<SoundItem>) -> Self {
-        SoundsBlock { sounds_list: sounds, lower_bound: 0, upper_bound: 4 }
+        SoundsBlock { sounds_list: sounds, lower_bound: 0, upper_bound: 4, volume_mult: 1.0 }
     }
 
     pub fn default() -> Self {
-        SoundsBlock { sounds_list: vec![], lower_bound: 0, upper_bound: 8 }
+        SoundsBlock { sounds_list: vec![], lower_bound: 0, upper_bound: 8, volume_mult: 1.0 }
     }
 
     pub fn add_sound(&mut self, sound: SoundItem) {
@@ -102,6 +103,13 @@ impl SoundsBlock {
         std::fs::write(RESOURCES_PATH.to_string() + "sounds.toml", new_toml).unwrap();
     }
 
+    fn change_volume_mult(&mut self, delta: f32) {
+        self.volume_mult = (self.volume_mult + delta).clamp(0.0, 1.0);
+        for sound in &mut self.sounds_list {
+            sound.change_volume(0.0, self.volume_mult);
+        }
+    }
+
     pub fn handle_key_event(&mut self, key: KeyCode, general_play_status: bool) {
         match key {
             KeyCode::Up => {
@@ -134,9 +142,12 @@ impl SoundsBlock {
                 }
             }
             KeyCode::Char('d') => self.delete_selected_sound_from_list(),
+            KeyCode::Char('+') => self.change_volume_mult(0.05),
+            KeyCode::Char('-') => self.change_volume_mult(-0.05),
             _ => {
+                let mult = self.volume_mult;
                 if let Some((selected_sound, _)) = self.get_selected_sound_mut() {
-                    if let Err(e) = selected_sound.handle_key_event(key, general_play_status) {
+                    if let Err(e) = selected_sound.handle_key_event(key, general_play_status, mult) {
                         eprintln!("Error handling key event: {}", e);
                     }
                 } 
