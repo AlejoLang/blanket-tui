@@ -1,6 +1,6 @@
 use std::fs;
 
-use ratatui::{buffer::Buffer, crossterm::event::{KeyCode, KeyEvent}, layout::{Alignment, Constraint, Direction, Layout, Rect}, style::Stylize, symbols::border, text::{Line, Text}, widgets::{Block, Paragraph, Widget}};
+use ratatui::{buffer::Buffer, crossterm::event::{KeyCode, KeyEvent}, layout::{Alignment, Constraint, Direction, Layout, Rect}, style::{self, Color, Style, Stylize}, symbols::border, text::{Line, Text}, widgets::{Block, Paragraph, Widget}};
 use crate::{app::RESOURCES_PATH, components::input::Input};
 use crate::config::{Config, SoundConfig};
 
@@ -122,7 +122,8 @@ impl Widget for &SoundAddPopup {
         let block = Block::bordered()
             .title(" Add Sound ".bold())
             .title_alignment(Alignment::Center)
-            .border_set(border::THICK);
+            .border_set(border::EMPTY)
+            .style(Style::default().bg(Color::Black));
         block.render(div_vert_hor[1], buf);
         let mut constraints = vec![Constraint::Length(3); self.inputs.len()];
         constraints.insert(0, Constraint::Max(2));
