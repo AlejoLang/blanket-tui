@@ -110,6 +110,10 @@ impl SoundsBlock {
         }
     }
 
+    pub fn get_mult(&self) -> f32 {
+        self.volume_mult
+    }
+
     pub fn handle_key_event(&mut self, key: KeyCode, general_play_status: bool) {
         match key {
             KeyCode::Up => {

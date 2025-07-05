@@ -3,7 +3,7 @@ use std::{
     io, path::Path, 
 };
 use ratatui::{
-    crossterm::event::{ self, KeyCode, KeyEvent }, layout::Rect, DefaultTerminal, Frame
+    crossterm::event::{ self, KeyCode, KeyEvent }, layout::{Constraint, Direction, Layout, Rect}, style::Stylize, text::{Line, Text}, widgets::Widget, DefaultTerminal, Frame
 };
 use rodio::{
     OutputStream, 
@@ -118,7 +118,17 @@ impl App {
     }
 
     fn draw(&self, frame: &mut Frame) {
-        frame.render_widget(&self.sounds_block, frame.area());
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(vec![Constraint::Length(3), Constraint::Fill(1)])
+            .split(frame.area());
+        let state_text = Line::from(if self.general_play_state {"Play".bold()} else {"Pause".bold()});
+        let mult_text = Line::from((format!("Vol: {:.0}%", self.sounds_block.get_mult() * 100.0)).bold());
+
+        let line = Text::from(vec![state_text, mult_text]);
+        frame.render_widget(line, chunks[0]);
+        frame.render_widget(&self.sounds_block, chunks[1]);
+
         if self.sound_add_popup.get_opened() {
             frame.render_widget(&self.sound_add_popup, frame.area());
         }
