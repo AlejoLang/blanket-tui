@@ -38,8 +38,10 @@ impl SoundAddPopup {
 
     pub fn clear(&mut self) {
         for input in &mut self.inputs {
+            input.set_active(false);
             input.clear();
         }
+        self.inputs[0].set_active(true); // Activate the first input
     }
 
     pub fn set_opened(&mut self, opened: bool) {

@@ -28,6 +28,10 @@ impl Input {
         self.character_index = position.clamp(0, self.text.len());
     }
 
+    pub fn set_active(&mut self, active: bool) {
+        self.active = active;
+    }
+
     pub fn switch_active(&mut self) {
         self.active = !self.active;
     }
