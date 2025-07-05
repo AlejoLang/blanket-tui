@@ -1,6 +1,6 @@
 use std::{
     fs,
-    io, 
+    io, path::Path, 
 };
 use ratatui::{
     crossterm::event::{ self, KeyCode, KeyEvent }, layout::Rect, DefaultTerminal, Frame
@@ -58,10 +58,21 @@ impl App {
             let toml_file = sounds_file.unwrap();
             let config: Config = toml::from_str(&toml_file).unwrap();
             for (i, sound) in config.sound.iter().enumerate() {
+                let path;
+                let relative_path = &(RESOURCES_PATH.to_string() + &sound.file);
+                if !fs::exists(relative_path).unwrap() {
+                    if !fs::exists(&sound.file).unwrap() {
+                        continue;
+                    }
+                    path = sound.file.to_string();
+                } else {
+                    path = relative_path.to_string();
+                }
+
                 let sound_item = SoundItem::new(
                     i as u32, 
                     sound.name.clone(), 
-                    RESOURCES_PATH.to_string() + &sound.file, 
+                    path, 
                     DEFAULT_VOLUME,
                     sound.icon.clone(), 
                     i == 0, 
@@ -82,14 +93,25 @@ impl App {
             let toml_file = sounds_file.unwrap();
             let config: Config = toml::from_str(&toml_file).unwrap();
             for (i, sound) in config.sound.iter().enumerate() {
+                let path;
+                let relative_path = &(RESOURCES_PATH.to_string() + &sound.file);
+                if !fs::exists(relative_path).unwrap() {
+                    if !fs::exists(&sound.file).unwrap() {
+                        continue;
+                    }
+                    path = sound.file.to_string();
+                } else {
+                    path = relative_path.to_string();
+                }
 
-                if self.sounds_block.get_sounds().iter().any(|s| s.get_name() == sound.name && s.get_path() == RESOURCES_PATH.to_string() + &sound.file) {
+                if self.sounds_block.get_sounds().iter().any(|s| s.get_name() == sound.name && s.get_path() == path) {
                     continue; // Skip if sound already exists
                 }
+
                 let sound_item = SoundItem::new(
                     i as u32,
                     sound.name.clone(),
-                    RESOURCES_PATH.to_string() + &sound.file,
+                    path,
                     DEFAULT_VOLUME,
                     sound.icon.clone(),
                     i == 0,

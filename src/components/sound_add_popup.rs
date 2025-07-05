@@ -11,9 +11,9 @@ pub struct SoundAddPopup {
 
 impl SoundAddPopup {
     pub fn new() -> Self {
-        let name_input = Input::new("Name".to_string(), 50, true);
-        let file_input = Input::new("File Path".to_string(), 100, false);
-        let icon_input = Input::new("Icon".to_string(), 1, false);
+        let name_input = Input::new(" Name ".to_string(), 50, true);
+        let file_input = Input::new(" File Path ".to_string(), 100, false);
+        let icon_input = Input::new(" Icon ".to_string(), 1, false);
         SoundAddPopup {
             inputs: vec![name_input, file_input, icon_input],
             opened: false,
@@ -118,10 +118,11 @@ impl Widget for &SoundAddPopup {
             .split(div_vert[1]);
 
         let block = Block::bordered()
-            .title("Add Sound")
+            .title(" Add Sound ".bold())
+            .title_alignment(Alignment::Center)
             .border_set(border::THICK);
         block.render(div_vert_hor[1], buf);
-        let mut constraints = vec![Constraint::Min(2); self.inputs.len()];
+        let mut constraints = vec![Constraint::Length(3); self.inputs.len()];
         constraints.insert(0, Constraint::Max(2));
         constraints.push(Constraint::Length(1));
         let chunks = Layout::default()

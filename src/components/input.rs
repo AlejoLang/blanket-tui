@@ -79,8 +79,12 @@ impl Input {
 
 impl Widget for &Input {
     fn render(self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
+        let min = self.character_index.saturating_sub(area.width as usize - 2).clamp(0, self.text.len());
+        let max = (self.character_index).clamp(0, self.text.len());
+
         let name = self.name.clone();
-        let text = Text::from(self.get_text());
+        let text = Text::from(self.get_text()[min..max].to_string())
+            .style(Style::default().fg(Color::White));
         let block = Block::bordered()
             .title(name)
             .border_set(border::ROUNDED)
