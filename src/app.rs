@@ -9,15 +9,16 @@ use rodio::{
     OutputStream, 
     OutputStreamHandle
 };
-use crate::components::{sound_item::SoundItem, sounds_block::SoundsBlock};
+use crate::components::{sound_item::SoundItem, sounds_block::SoundsBlock,sound_add_popup::SoundAddPopup};
 use crate::config::Config;
 
-const RESOURCES_PATH: &str = "resources/";
-const DEFAULT_VOLUME: f32 = 0.5;
+pub const RESOURCES_PATH: &str = "./resources/";
+pub const DEFAULT_VOLUME: f32 = 0.5;
 
 pub struct App{
     running: bool,
     sounds_block: SoundsBlock,
+    sound_add_popup: SoundAddPopup,
     stream_handle: Option<OutputStreamHandle>,
     _stream: Option<OutputStream>,
     general_play_state: bool,
@@ -33,7 +34,8 @@ impl App {
             }
         };
         let sounds_block = SoundsBlock::default();
-        App { running: true, sounds_block, stream_handle, _stream: stream, general_play_state: true }
+        let sound_add_popup = SoundAddPopup::new();
+        App { running: true, sounds_block, stream_handle, _stream: stream, general_play_state: true, sound_add_popup }
     }
 
     pub fn run(&mut self, term: &mut DefaultTerminal) -> io::Result<()> {
@@ -71,8 +73,39 @@ impl App {
         }
     }
 
+    fn refresh_list(&mut self) {
+        let sounds_file = fs::read_to_string(RESOURCES_PATH.to_string() + "sounds.toml");
+        
+        if sounds_file.is_err() {
+            eprintln!("Warning: sounds.toml file not found. No sounds will be loaded.");
+        } else {
+            let toml_file = sounds_file.unwrap();
+            let config: Config = toml::from_str(&toml_file).unwrap();
+            for (i, sound) in config.sound.iter().enumerate() {
+
+                if self.sounds_block.get_sounds().iter().any(|s| s.get_name() == sound.name && s.get_path() == RESOURCES_PATH.to_string() + &sound.file) {
+                    continue; // Skip if sound already exists
+                }
+                let sound_item = SoundItem::new(
+                    i as u32,
+                    sound.name.clone(),
+                    RESOURCES_PATH.to_string() + &sound.file,
+                    DEFAULT_VOLUME,
+                    sound.icon.clone(),
+                    i == 0,
+                    false,
+                    self.stream_handle.as_ref()
+                );
+                self.sounds_block.add_sound(sound_item);
+            }
+        }
+    }
+
     fn draw(&self, frame: &mut Frame) {
         frame.render_widget(&self.sounds_block, frame.area());
+        if self.sound_add_popup.get_opened() {
+            frame.render_widget(&self.sound_add_popup, frame.area());
+        }
         return;
     }
 
@@ -87,11 +120,48 @@ impl App {
 
     fn handle_key_event(&mut self, key_event: KeyEvent) {
         match key_event.code {
-            KeyCode::Char('q') => self.exit(),
-            KeyCode::Esc => self.exit(),
+            KeyCode::Char('q') => self.handle_exit(key_event),
+            KeyCode::Char('n') => self.handle_popup(key_event),
+            KeyCode::Esc => self.handle_exit(key_event),
+            KeyCode::Enter => {
+                if self.sound_add_popup.get_opened() {
+                    self.sound_add_popup.handle_key_event(key_event);
+                    self.refresh_list();
+                    return;
+                }
+                self.sounds_block.handle_key_event(key_event.code);
+            }
             _ => {
+                if self.sound_add_popup.get_opened() {
+                    self.sound_add_popup.handle_key_event(key_event);
+                    return;
+                }
                 self.sounds_block.handle_key_event(key_event.code); 
             }
+        }
+    }
+
+    fn handle_popup(&mut self, key_event: KeyEvent) {
+        if self.sound_add_popup.get_opened() {
+            self.sound_add_popup.handle_key_event(key_event);
+        } else {
+            self.sound_add_popup.set_opened(true);
+        }
+    }
+
+    fn handle_exit(&mut self, key_event: KeyEvent) {
+        if key_event.code == KeyCode::Esc {
+            if self.sound_add_popup.get_opened() {
+                self.sound_add_popup.set_opened(false);
+                self.sound_add_popup.clear();
+                return;
+            }
+            self.exit();    
+        }
+        if self.sound_add_popup.get_opened() {
+            self.sound_add_popup.handle_key_event(key_event);
+        } else {
+            self.exit();
         }
     }
 
