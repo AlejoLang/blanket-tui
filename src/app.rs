@@ -61,9 +61,6 @@ impl App {
                 let path;
                 let relative_path = &(RESOURCES_PATH.to_string() + &sound.file);
                 if !fs::exists(relative_path).unwrap() {
-                    if !fs::exists(&sound.file).unwrap() {
-                        continue;
-                    }
                     path = sound.file.to_string();
                 } else {
                     path = relative_path.to_string();
@@ -96,9 +93,6 @@ impl App {
                 let path;
                 let relative_path = &(RESOURCES_PATH.to_string() + &sound.file);
                 if !fs::exists(relative_path).unwrap() {
-                    if !fs::exists(&sound.file).unwrap() {
-                        continue;
-                    }
                     path = sound.file.to_string();
                 } else {
                     path = relative_path.to_string();

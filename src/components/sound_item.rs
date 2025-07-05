@@ -140,3 +140,16 @@ impl Widget for &SoundItem {
         volume_paragraph.render(chunks[1], buf);
     }
 }
+
+impl Clone for SoundItem {
+    fn clone(&self) -> Self {
+        SoundItem {
+            id: self.id,
+            name: self.name.clone(),
+            icon: self.icon.clone(),
+            selected: self.selected,
+            active: self.active,
+            sound: self.sound.clone()
+        }
+    }
+}

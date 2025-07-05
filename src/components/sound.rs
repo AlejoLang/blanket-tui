@@ -1,5 +1,5 @@
 use std::{fs::File, io::{BufReader}};
-use rodio::{Decoder, OutputStreamHandle, Sink, Source};
+use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink, Source};
 
 pub struct Sound {
     path: String,
@@ -68,5 +68,15 @@ impl Sound {
             return !sink.is_paused();
         }
         false
+    }
+}
+
+impl Clone for Sound {
+    fn clone(&self) -> Self {
+        Sound {
+            path: self.path.clone(),
+            volume: self.volume,
+            sink: None,
+        }
     }
 }

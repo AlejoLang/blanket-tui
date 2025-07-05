@@ -1,5 +1,5 @@
 use ratatui::{buffer::Buffer, crossterm::event::KeyCode, layout::{Constraint, Layout, Rect}, style::Stylize, symbols::border, text::{Line, Text}, widgets::{Block, Widget}};
-use crate::components::sound_item::SoundItem;
+use crate::{app::RESOURCES_PATH, components::sound_item::SoundItem, config::Config};
 
 pub struct SoundsBlock {
     sounds_list: Vec<SoundItem>,
@@ -67,6 +67,41 @@ impl SoundsBlock {
         }
     }
 
+    pub fn delete_selected_sound_from_list(&mut self) {
+        let current_index = match self.sounds_list.iter().position(|item| item.is_selected()) {
+            Some(index) => index,
+            None => return,
+        };
+        let sound = self.sounds_list[current_index].clone();
+        
+        if current_index >= self.sounds_list.len() - 1 {
+            self.select_previous_sound();
+        } else {
+            self.select_next_sound();
+        }
+        self.delete_selected_sound_from_file(&sound);
+        self.sounds_list.remove(current_index);
+        if current_index < self.lower_bound {
+            self.lower_bound -= 1;
+            self.upper_bound -= 1;
+        } else if current_index <= self.upper_bound {
+            self.upper_bound -= 1;
+        }
+    }
+
+    fn delete_selected_sound_from_file(&mut self, sound: &SoundItem) {
+        let sounds_file = std::fs::read_to_string(RESOURCES_PATH.to_string() + "sounds.toml");
+        if let Err(e) = sounds_file {
+            eprintln!("Error reading sounds file: {}", e);
+            return;
+        }
+        let toml_file = sounds_file.unwrap();
+        let mut config: Config = toml::from_str(&toml_file).unwrap();
+        config.sound.retain(|s| s.name != sound.get_name() && s.file != sound.get_path());
+        let new_toml = toml::to_string(&config).unwrap();
+        std::fs::write(RESOURCES_PATH.to_string() + "sounds.toml", new_toml).unwrap();
+    }
+
     pub fn handle_key_event(&mut self, key: KeyCode) {
         match key {
             KeyCode::Up => {
@@ -98,6 +133,7 @@ impl SoundsBlock {
                     self.upper_bound = (self.upper_bound + page_size).min(self.sounds_list.len() - 1);
                 }
             }
+            KeyCode::Char('d') => self.delete_selected_sound_from_list(),
             _ => {
                 if let Some((selected_sound, _)) = self.get_selected_sound_mut() {
                     if let Err(e) = selected_sound.handle_key_event(key) {
