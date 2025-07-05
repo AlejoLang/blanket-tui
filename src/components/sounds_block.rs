@@ -102,7 +102,7 @@ impl SoundsBlock {
         std::fs::write(RESOURCES_PATH.to_string() + "sounds.toml", new_toml).unwrap();
     }
 
-    pub fn handle_key_event(&mut self, key: KeyCode) {
+    pub fn handle_key_event(&mut self, key: KeyCode, general_play_status: bool) {
         match key {
             KeyCode::Up => {
                 let i = self.select_previous_sound();
@@ -136,7 +136,7 @@ impl SoundsBlock {
             KeyCode::Char('d') => self.delete_selected_sound_from_list(),
             _ => {
                 if let Some((selected_sound, _)) = self.get_selected_sound_mut() {
-                    if let Err(e) = selected_sound.handle_key_event(key) {
+                    if let Err(e) = selected_sound.handle_key_event(key, general_play_status) {
                         eprintln!("Error handling key event: {}", e);
                     }
                 } 

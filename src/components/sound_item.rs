@@ -74,13 +74,15 @@ impl SoundItem {
         self.sound.switch_play_pause();
     }
 
-    pub fn handle_key_event(&mut self, key: KeyCode) -> io::Result<()> {
+    pub fn handle_key_event(&mut self, key: KeyCode, general_play_status: bool) -> io::Result<()> {
         if self.selected {
             match key {
                 KeyCode::Left => { self.change_volume(-0.05); },
                 KeyCode::Right => { self.change_volume(0.05); },
                 KeyCode::Char(' ') => { 
-                    self.sound.switch_play_pause();
+                    if general_play_status {
+                        self.sound.switch_play_pause();
+                    }
                     self.toggle_active();}
                 _ => {}
             }

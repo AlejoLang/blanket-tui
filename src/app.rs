@@ -145,14 +145,15 @@ impl App {
                     self.refresh_list();
                     return;
                 }
-                self.sounds_block.handle_key_event(key_event.code);
+                self.general_play_state = !self.general_play_state;
+                self.sounds_block.handle_key_event(key_event.code, self.general_play_state);
             }
             _ => {
                 if self.sound_add_popup.get_opened() {
                     self.sound_add_popup.handle_key_event(key_event);
                     return;
                 }
-                self.sounds_block.handle_key_event(key_event.code); 
+                self.sounds_block.handle_key_event(key_event.code, self.general_play_state); 
             }
         }
     }
